@@ -44,7 +44,8 @@ type Logger interface {
 
 // Store 客户端
 type Store interface {
-	Get(accesskey string) string
+	// 查询access_key的secret_key, 如果失败, 请返回空的secretKey
+	Get(accessKey string) (secretKey string)
 }
 
 // Init 初始化

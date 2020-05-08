@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,9 @@ const randomLen = 8
 
 // NewRequestWithAKSK 新建HTTP请求, 使用aksk认证
 func NewRequestWithAKSK(ctx context.Context, method, url, ak string, body []byte) (*http.Request, error) {
+	if store == nil {
+		return nil, errors.New("未初始化accesskey")
+	}
 	sk := store.Get(ak)
 	if sk == "" {
 		return nil, fmt.Errorf("未找到access_key:%s的secret_key", ak)
@@ -29,7 +33,7 @@ func NewRequestWithAKSK(ctx context.Context, method, url, ak string, body []byte
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		return nil, fmt.Errorf("读取随即字符串发生错误:%w", err)
 	}
-	randomstr := string(b)
+	randomstr := encoder.Encode(b)
 
 	ss := make([]string, 0, 5)
 	ss = append(ss, ak, randomstr)
