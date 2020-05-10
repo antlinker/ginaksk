@@ -28,11 +28,13 @@ func handleError(c *gin.Context, err error) {
 	if !ok {
 		e = Err{Message: err.Error()}
 	}
+	defaultLogger.Printf("valid request error: %w", err)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
 }
 
 // Validate 验证请求
 func Validate(keyFn KeyFunc, skipBody bool, fn ErrorHandler) gin.HandlerFunc {
+	defaultLogger.Printf("启用aksk认证")
 	if keyFn == nil {
 		panic("store is nil")
 	}
