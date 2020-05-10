@@ -58,11 +58,11 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-func newError(msg string) Error {
-	return Error{Message: msg}
+func newError(msg string) *Error {
+	return &Error{Message: msg}
 }
 
-func (e Error) Error() string {
+func (e *Error) Error() string {
 	return fmt.Sprintf("%s", e.Message)
 }
 

@@ -24,9 +24,9 @@ var (
 type ErrorHandler func(c *gin.Context, err error)
 
 func handleError(c *gin.Context, err error) {
-	e, ok := err.(Error)
+	e, ok := err.(*Error)
 	if !ok {
-		e = Error{Message: err.Error()}
+		e = &Error{Message: err.Error()}
 	}
 	logger.Printf("valid request error: %w", err)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
