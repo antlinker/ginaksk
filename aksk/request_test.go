@@ -2,27 +2,13 @@ package aksk
 
 import (
 	"context"
-	"net/http"
 	"testing"
 )
 
-type _store map[string]string
-
-func (s _store) Get(ak string) (sk string) {
-	sk = s[ak]
-	return
-}
-
-func TestNewRequestWithAKSK(t *testing.T) {
-	store = Store(_store{
-		"202cb962ac59075b964b07152d234b70": "250cf8b51c773f3f8dc8b4be867a9a02",
-	})
+func TestRequest(t *testing.T) {
 	type args struct {
-		ctx    context.Context
-		method string
-		url    string
-		ak     string
-		body   []byte
+		ak string
+		sk string
 	}
 	tests := []struct {
 		name    string
@@ -30,28 +16,41 @@ func TestNewRequestWithAKSK(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Success",
+			name: "Request",
 			args: args{
-				ctx:    context.TODO(),
-				method: http.MethodPost,
-				url:    "http://localhost:9221/api/set/one",
-				ak:     "202cb962ac59075b964b07152d234b70",
-				body:   []byte(`{"target":"127.0.0.1:9110"}`),
+				ak: "202cb962ac59075b964b07152d234b70",
+				sk: "250cf8b51c773f3f8dc8b4be867a9a02",
 			},
 			wantErr: false,
+		},
+		{
+			name:    "RequestEmptyAccessKey",
+			wantErr: true,
+		},
+		{
+			name: "RequestEmptySecretKey",
+			args: args{
+				ak: "202cb962ac59075b964b07152d234b70",
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewRequestWithAKSK(tt.args.ctx, tt.args.method, tt.args.url, tt.args.ak, tt.args.body)
+			got, err := NewRequestFunc(tt.args.ak, tt.args.sk)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewRequestWithAKSK() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Request() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Logf("%v", got)
-			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("NewRequestWithAKSK() = %v, want %v", got, tt.want)
-			// }
+			if got == nil {
+				return
+			}
+			req, err := got(context.TODO(), "POST", `http://localhost:8080/e`, []byte(`{"param":"a"}`))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Request() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("%+v", req)
 		})
 	}
 }

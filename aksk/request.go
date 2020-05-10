@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,50 +11,60 @@ import (
 	"time"
 )
 
-const randomLen = 8
+var (
+	// ErrAccessKeyEmpty ak为空
+	ErrAccessKeyEmpty = newErr("accesskey为空")
+	// ErrSecretKeyEmpty sk为空
+	ErrSecretKeyEmpty = newErr("secretkey为空")
+)
 
-// NewRequestWithAKSK 新建HTTP请求, 使用aksk认证
-func NewRequestWithAKSK(ctx context.Context, method, url, ak string, body []byte) (*http.Request, error) {
-	if store == nil {
-		return nil, errors.New("未初始化accesskey")
+// RequestFunc aksk的请求构造函数
+type RequestFunc func(ctx context.Context, method, url string, body []byte) (*http.Request, error)
+
+// NewRequestFunc 返回一个RequestFunc
+func NewRequestFunc(ak, sk string) (RequestFunc, error) {
+	if ak == "" {
+		return nil, ErrAccessKeyEmpty
 	}
-	sk := store.Get(ak)
 	if sk == "" {
-		return nil, fmt.Errorf("未找到access_key:%s的secret_key", ak)
+		return nil, ErrSecretKeyEmpty
 	}
-	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("创建HTTP请求发生错误:%s", err)
+	fn := func(ctx context.Context, method, url string, body []byte) (*http.Request, error) {
+		req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("创建HTTP请求发生错误:%w", err)
+		}
+
+		// 随即字符串
+		b := make([]byte, 6)
+		if _, err := io.ReadFull(rand.Reader, b); err != nil {
+			return nil, fmt.Errorf("读取随即字符串发生错误:%w", err)
+		}
+		randomstr := defaultValidator.EncodeToString(b)
+
+		ss := make([]string, 0, 5)
+		ss = append(ss, ak, randomstr)
+		// ak头部
+		req.Header.Set(HeaderAccessKey, ak)
+		// randomstr头部
+		req.Header.Set(HeaderRandomStr, randomstr)
+
+		ts := strconv.FormatInt(time.Now().Unix(), 10)
+		ss = append(ss, ts)
+		// 时间戳头部
+		req.Header.Set(HeaderTimestramp, ts)
+
+		if len(body) > 0 {
+			bodyhash := defaultValidator.EncodeToString(hashBytes(body))
+			ss = append(ss, bodyhash)
+			// body的hash头部
+			req.Header.Set(HeaderBodyHash, bodyhash)
+		}
+
+		// 签名头部
+		b = signWithHmac([]byte(sk), ss...)
+		req.Header.Set(HeaderSignature, defaultValidator.EncodeToString(b))
+		return req, nil
 	}
-
-	// 随即字符串
-	b := make([]byte, randomLen)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return nil, fmt.Errorf("读取随即字符串发生错误:%w", err)
-	}
-	randomstr := encoder.Encode(b)
-
-	ss := make([]string, 0, 5)
-	ss = append(ss, ak, randomstr)
-	// ak头部
-	req.Header.Set(HeaderAccessKey, ak)
-	// randomstr头部
-	req.Header.Set(HeaderRandomStr, randomstr)
-
-	ts := strconv.FormatInt(time.Now().Unix(), 10)
-	ss = append(ss, ts)
-	// 时间戳头部
-	req.Header.Set(HeaderTimestramp, ts)
-
-	if len(body) > 0 {
-		bodyhash := encoder.Encode(encoder.Mac(body))
-		ss = append(ss, bodyhash)
-		// body的hash头部
-		req.Header.Set(HeaderBodyHash, bodyhash)
-	}
-	mac := encoder.Hmac([]byte(sk), ss...)
-	s := encoder.Encode(mac)
-	// 签名头部
-	req.Header.Set(HeaderSignature, s)
-	return req, nil
+	return fn, nil
 }
