@@ -1,13 +1,5 @@
 /*
 Package aksk 基于ak, sk实现的服务认证中间件
-
-	Init(encoder, store, logger)
-	e := gin.New()
-	g := e.Group("api")
-	// 校验头部签名
-	g.Use(aksk.ValidHeader())
-	// 校验报文
-	g.Use(aksk.ValidBody())
 */
 package aksk
 
