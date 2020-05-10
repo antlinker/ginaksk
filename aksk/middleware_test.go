@@ -3,7 +3,9 @@ package aksk
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -107,7 +109,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithInvalidSign",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, "111111"),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, "37d8cf705e8b8327687e3c0025ac711bc309810196307cb8e1180cddcf3573b"),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -119,7 +121,11 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithInvalidBodyHash",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderBodyHash, "111111"),
+					Request: func() *http.Request {
+						req := generateRequest("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02")
+						req.Body = ioutil.NopCloser(strings.NewReader(`{"param":"b"}`))
+						return req
+					}(),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"

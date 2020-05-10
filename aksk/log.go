@@ -5,7 +5,7 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
-var defaultLogger Logger = &NullLogger{}
+var logger Logger = &NullLogger{}
 
 // SetLogger 设置日志
 func SetLogger(l Logger) {
@@ -13,7 +13,7 @@ func SetLogger(l Logger) {
 		return
 	}
 	lock.Lock()
-	defaultLogger = l
+	logger = l
 	lock.Unlock()
 }
 

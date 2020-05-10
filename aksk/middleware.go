@@ -11,30 +11,30 @@ import (
 
 var (
 	// ErrSignatueEmpty 请求签名为空
-	ErrSignatueEmpty = newErr("请求签名为空")
+	ErrSignatueEmpty = newError("请求签名为空")
 	// ErrSignatureInvalid 请求签名无效
-	ErrSignatureInvalid = newErr("请求签名无效")
+	ErrSignatureInvalid = newError("请求签名无效")
 	// ErrBodyInvalid 请求内容无效
-	ErrBodyInvalid = newErr("请求内容无效")
+	ErrBodyInvalid = newError("请求内容无效")
 	// ErrBodyHashInvalid 请求内容哈希值无效
-	ErrBodyHashInvalid = newErr("请求内容哈希值无效")
+	ErrBodyHashInvalid = newError("请求内容哈希值无效")
 )
 
 // ErrorHandler 错误处理函数
 type ErrorHandler func(c *gin.Context, err error)
 
 func handleError(c *gin.Context, err error) {
-	e, ok := err.(Err)
+	e, ok := err.(Error)
 	if !ok {
-		e = Err{Message: err.Error()}
+		e = Error{Message: err.Error()}
 	}
-	defaultLogger.Printf("valid request error: %w", err)
+	logger.Printf("valid request error: %w", err)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
 }
 
 // Validate 验证请求
 func Validate(keyFn KeyFunc, skipBody bool, fn ErrorHandler) gin.HandlerFunc {
-	defaultLogger.Printf("启用aksk认证")
+	logger.Printf("启用aksk认证")
 	if keyFn == nil {
 		panic("store is nil")
 	}

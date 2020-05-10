@@ -13,9 +13,9 @@ import (
 
 var (
 	// ErrAccessKeyEmpty ak为空
-	ErrAccessKeyEmpty = newErr("accesskey为空")
+	ErrAccessKeyEmpty = newError("accesskey为空")
 	// ErrSecretKeyEmpty sk为空
-	ErrSecretKeyEmpty = newErr("secretkey为空")
+	ErrSecretKeyEmpty = newError("secretkey为空")
 )
 
 // RequestFunc aksk的请求构造函数
@@ -40,7 +40,7 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 		if _, err := io.ReadFull(rand.Reader, b); err != nil {
 			return nil, fmt.Errorf("读取随即字符串发生错误:%w", err)
 		}
-		randomstr := defaultValidator.EncodeToString(b)
+		randomstr := encoder.EncodeToString(b)
 
 		ss := make([]string, 0, 5)
 		ss = append(ss, ak, randomstr)
@@ -55,15 +55,15 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 		req.Header.Set(HeaderTimestramp, ts)
 
 		if len(body) > 0 {
-			bodyhash := defaultValidator.EncodeToString(hashBytes(body))
+			bodyhash := encoder.EncodeToString(hashSum(body))
 			ss = append(ss, bodyhash)
 			// body的hash头部
 			req.Header.Set(HeaderBodyHash, bodyhash)
 		}
 
 		// 签名头部
-		b = signWithHmac([]byte(sk), ss...)
-		req.Header.Set(HeaderSignature, defaultValidator.EncodeToString(b))
+		b = hmacSum([]byte(sk), ss...)
+		req.Header.Set(HeaderSignature, encoder.EncodeToString(b))
 		return req, nil
 	}
 	return fn, nil

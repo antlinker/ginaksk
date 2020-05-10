@@ -6,6 +6,7 @@ package aksk
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/sha256"
 	"fmt"
 	"hash"
 	"sort"
@@ -15,24 +16,20 @@ import (
 	"time"
 )
 
-var (
-	lock             sync.Mutex
-	defaultValidator Validator = &ValidatorWithHexSha256{}
-)
+var lock sync.Mutex
 
-// Encoding 编码方法接口
-type Encoding interface {
+// Encoder 编码方法接口
+type Encoder interface {
 	// EncodeToString 编码成字符串
 	EncodeToString(b []byte) string
 	// DecodeString 将字符串解码成字节切片
 	DecodeString(s string) ([]byte, error)
 }
 
-// Validator 验证接口
-type Validator interface {
-	Encoding
-	NewHash() hash.Hash
-}
+// HashFunc 返回一个hash.Hash接口
+type HashFunc func() hash.Hash
+
+var hashFunc HashFunc = sha256.New
 
 // KeyFunc 查询secretkey
 type KeyFunc func(accessKey string) (secretKey string)
@@ -55,27 +52,27 @@ const (
 	minDuration = -1 * time.Minute
 )
 
-// Err aksk的错误定义
-type Err struct {
+// Error aksk的错误定义
+type Error struct {
 	// 错误消息
 	Message string `json:"message"`
 }
 
-func newErr(msg string) Err {
-	return Err{Message: msg}
+func newError(msg string) Error {
+	return Error{Message: msg}
 }
 
-func (e Err) Error() string {
+func (e Error) Error() string {
 	return fmt.Sprintf("%s", e.Message)
 }
 
 var (
 	// ErrTimestrampEmpty 缺少时间戳
-	ErrTimestrampEmpty = newErr("未提供timestramp")
+	ErrTimestrampEmpty = newError("未提供timestramp")
 	// ErrTimestrampExpired 时间戳过期
-	ErrTimestrampExpired = newErr("timestramp过期")
+	ErrTimestrampExpired = newError("timestramp过期")
 	// ErrTimestrampInvalid 时间戳无效
-	ErrTimestrampInvalid = newErr("timestramp无效")
+	ErrTimestrampInvalid = newError("timestramp无效")
 )
 
 // parseTimestramp 解析时间戳
@@ -97,14 +94,15 @@ func parseTimestramp(s string) error {
 	return nil
 }
 
-func hashBytes(b []byte) []byte {
-	h := defaultValidator.NewHash()
+func hashSum(b []byte) []byte {
+	h := hashFunc()
 	h.Write(b)
 	return h.Sum(nil)
+
 }
 
-func signWithHmac(key []byte, elems ...string) []byte {
-	h := hmac.New(defaultValidator.NewHash, key)
+func hmacSum(key []byte, elems ...string) []byte {
+	h := hmac.New(hashFunc, key)
 	sort.Strings(elems)
 	s := strings.Join(elems, "")
 	h.Write([]byte(s))
@@ -113,18 +111,18 @@ func signWithHmac(key []byte, elems ...string) []byte {
 
 // validBytes 通过计算请求b的sha256值验证请求内容
 // 如果b长度为0, 返回真; 否则检查mac和编码器计算的Mac是否一致
-func validBytes(b []byte, mac string) error {
+func validBytes(b []byte, s string) error {
 	if len(b) == 0 {
 		return nil
 	}
-	if mac == "" {
+	if s == "" {
 		return ErrBodyHashInvalid
 	}
-	mac1, err := defaultValidator.DecodeString(mac)
+	mac, err := encoder.DecodeString(s)
 	if err != nil {
 		return ErrBodyHashInvalid
 	}
-	if ok := bytes.Equal(mac1, hashBytes(b)); ok {
+	if ok := bytes.Equal(mac, hashSum(b)); ok {
 		return nil
 	}
 	return ErrBodyHashInvalid
@@ -133,11 +131,11 @@ func validBytes(b []byte, mac string) error {
 // validSignature 校验头部签名
 func validSignature(sk, sign string, elems ...string) error {
 	// 解码签名,得道原始的字节切片
-	mac1, err := defaultValidator.DecodeString(sign)
+	mac, err := encoder.DecodeString(sign)
 	if err != nil {
 		return ErrSignatureInvalid
 	}
-	if ok := hmac.Equal(mac1, signWithHmac([]byte(sk), elems...)); ok {
+	if ok := hmac.Equal(mac, hmacSum([]byte(sk), elems...)); ok {
 		return nil
 	}
 	return ErrSignatureInvalid
