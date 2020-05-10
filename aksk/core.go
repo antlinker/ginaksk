@@ -10,6 +10,7 @@ import (
 	"hash"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -105,7 +106,8 @@ func hashBytes(b []byte) []byte {
 func signWithHmac(key []byte, elems ...string) []byte {
 	h := hmac.New(defaultValidator.NewHash, key)
 	sort.Strings(elems)
-	h.Write(nil)
+	s := strings.Join(elems, "")
+	h.Write([]byte(s))
 	return h.Sum(nil)
 }
 
