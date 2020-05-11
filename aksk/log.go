@@ -12,8 +12,8 @@ func SetLogger(l Logger) {
 	}
 }
 
-// NullLogger 空日志
-type NullLogger struct{}
+// discardLogger 空日志
+type discardLogger struct{}
 
 // Printf 忽略打印日志
-func (l *NullLogger) Printf(format string, args ...interface{}) {}
+func (l *discardLogger) Printf(format string, args ...interface{}) {}

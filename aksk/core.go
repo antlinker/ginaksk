@@ -18,7 +18,7 @@ import (
 var (
 	hashFunc HashFunc = sha256.New
 	encoder  Encoder  = &HexEncoder{}
-	logger   Logger   = &NullLogger{}
+	logger   Logger   = &discardLogger{}
 )
 
 // Encoder 编码方法接口

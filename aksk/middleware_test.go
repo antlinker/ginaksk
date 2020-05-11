@@ -17,7 +17,7 @@ import (
 func cleanup() {
 	hashFunc = sha256.New
 	encoder = &HexEncoder{}
-	logger = &NullLogger{}
+	logger = &discardLogger{}
 }
 
 func generateRequest(ak, sk string) *http.Request {
