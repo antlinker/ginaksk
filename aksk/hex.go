@@ -6,10 +6,9 @@ import (
 
 // SetEncoder 设置编码实现
 func SetEncoder(enc Encoder) {
-	if enc == nil {
-		return
+	if enc != nil {
+		encoder = enc
 	}
-	encoder = enc
 }
 
 // HexEncoder 16进制编码格式

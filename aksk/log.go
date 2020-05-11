@@ -7,10 +7,9 @@ type Logger interface {
 
 // SetLogger 设置日志
 func SetLogger(l Logger) {
-	if l == nil {
-		return
+	if l != nil {
+		logger = l
 	}
-	logger = l
 }
 
 // NullLogger 空日志

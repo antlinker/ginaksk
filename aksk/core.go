@@ -34,7 +34,9 @@ type HashFunc func() hash.Hash
 
 // SetHash 自定义Hash
 func SetHash(h HashFunc) {
-	hashFunc = h
+	if h != nil {
+		hashFunc = h
+	}
 }
 
 // KeyFunc 查询secretkey
