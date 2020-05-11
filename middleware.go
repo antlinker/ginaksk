@@ -9,17 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	// ErrSignatueEmpty 请求签名为空
-	ErrSignatueEmpty = newError("请求签名为空")
-	// ErrSignatureInvalid 请求签名无效
-	ErrSignatureInvalid = newError("请求签名无效")
-	// ErrBodyInvalid 请求内容无效
-	ErrBodyInvalid = newError("请求内容无效")
-	// ErrBodyHashInvalid 请求内容哈希值无效
-	ErrBodyHashInvalid = newError("请求内容哈希值无效")
-)
-
 // ErrorHandler 错误处理函数
 type ErrorHandler func(c *gin.Context, err error)
 
@@ -28,19 +17,24 @@ func handleError(c *gin.Context, err error) {
 	if !ok {
 		e = &Error{Message: err.Error()}
 	}
-	logger.Printf("valid request error: %s", err)
+	logger.Printf("验证请求错误: %s", err)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
 }
 
-// Validate 返回一个验证请求的gin中间件, keyFn指定了查询SecretKey的函数, 如果skipBody为true, 跳过检查body的hash值是否一致, fn不为空时,使用自定义的错误处理函数
+// initialized 初始化完成
+var initialized bool
+
+// Validate 返回一个验证请求的gin中间件, keyFn指定了查询SecretKey的函数,如果等于nil,将panic; 如果skipBody为true, 跳过检查body的hash值是否一致; fn不为nil时,使用自定义的错误处理函数
 func Validate(keyFn KeyFunc, skipBody bool, fn ErrorHandler) gin.HandlerFunc {
 	logger.Printf("启用aksk认证")
 	if keyFn == nil {
-		panic("store is nil")
+		panic("keyFn等于nil")
 	}
 	if fn == nil {
 		fn = handleError
 	}
+	// 使用Validate后,设置已初始化,限制调用SetHash,SetLogger,SetEncoder函数
+	initialized = true
 	return func(c *gin.Context) {
 		if err := validRequest(c, keyFn, skipBody); err != nil {
 			fn(c, err)
@@ -52,7 +46,7 @@ func Validate(keyFn KeyFunc, skipBody bool, fn ErrorHandler) gin.HandlerFunc {
 }
 
 func validRequest(c *gin.Context, keyFn KeyFunc, skipBody bool) error {
-	ak := c.GetHeader(HeaderAccessKey)
+	ak := c.GetHeader(headerAccessKey)
 	if ak == "" {
 		return ErrAccessKeyEmpty
 	}
@@ -60,16 +54,16 @@ func validRequest(c *gin.Context, keyFn KeyFunc, skipBody bool) error {
 	if sk == "" {
 		return ErrSecretKeyEmpty
 	}
-	ts := c.GetHeader(HeaderTimestramp)
+	ts := c.GetHeader(headerTimestramp)
 	if err := parseTimestramp(ts); err != nil {
 		return err
 	}
-	signature := c.GetHeader(HeaderSignature)
+	signature := c.GetHeader(headerSignature)
 	if signature == "" {
 		return ErrSignatueEmpty
 	}
-	bodyhash := c.GetHeader(HeaderBodyHash)
-	randomstr := c.GetHeader(HeaderRandomStr)
+	bodyhash := c.GetHeader(headerBodyHash)
+	randomstr := c.GetHeader(headerRandomStr)
 	if err := validSignature(sk, signature, ak, ts, randomstr, bodyhash); err != nil {
 		return err
 	}

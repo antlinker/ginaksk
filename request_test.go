@@ -50,7 +50,7 @@ func TestRequest(t *testing.T) {
 				t.Errorf("Request() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Logf("%+v", req)
+			t.Logf("%v", req.Header)
 		})
 	}
 }

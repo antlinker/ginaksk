@@ -2,6 +2,7 @@ package ginaksk_test
 
 import (
 	"crypto/md5"
+	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -62,10 +63,11 @@ func (b64 *base64Encoder) DecodeString(s string) (b []byte, err error) {
 }
 
 func Example_aksk() {
-	ginaksk.SetLogger(testLogger) // 可选
-	ginaksk.SetHash(md5.New)      // 可选
-	ginaksk.SetEncoder(&base64Encoder{enc: base64.RawStdEncoding})
+	ginaksk.SetLogger(testLogger)                                  // 可选
+	ginaksk.SetHash(md5.New)                                       // 可选
+	ginaksk.SetEncoder(&base64Encoder{enc: base64.RawStdEncoding}) // 可选
 	e := gin.New()
 	// 验证请求签名, 并验证请求内容, 自定义错误处理
 	e.Use(ginaksk.Validate(GetKeyFunc(), false, handlError))
+	ginaksk.SetHash(sha1.New)
 }

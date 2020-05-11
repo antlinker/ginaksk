@@ -2,7 +2,7 @@ package ginaksk
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"io/ioutil"
@@ -14,6 +14,7 @@ import (
 )
 
 func cleanup() {
+	initialized = false
 	hashFunc = sha256.New
 	encoder = &hexEncoder{}
 	logger = &discardLogger{}
@@ -46,6 +47,9 @@ func (p *testLogger) Printf(format string, args ...interface{}) {
 }
 
 func Test_validRequest(t *testing.T) {
+	t.Cleanup(func() {
+		initialized = false
+	})
 	SetLogger(&testLogger{t: t})
 	type args struct {
 		c        *gin.Context
@@ -88,7 +92,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithoutAk",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderAccessKey, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerAccessKey, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -100,7 +104,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithoutTs",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderTimestramp, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestramp, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -112,7 +116,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithoutSign",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerSignature, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -124,7 +128,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithInvalidSign",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, "37d8cf705e8b8327687e3c0025ac711bc309810196307cb8e1180cddcf3573b"),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerSignature, "37d8cf705e8b8327687e3c0025ac711bc309810196307cb8e1180cddcf3573b"),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -179,7 +183,9 @@ func Test_validRequest(t *testing.T) {
 			if err := validRequest(tt.args.c, tt.args.keyFn, tt.args.skipBody); (err != nil) != tt.wantErr {
 				t.Errorf("validRequest() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			// t.Logf("%+v", tt.args.c.Request)
+			if tt.name == "Ok" {
+				t.Logf("%v", tt.args.c.Request.Header)
+			}
 		})
 	}
 }
@@ -198,8 +204,8 @@ func (b64 *base64Encoder) DecodeString(s string) (b []byte, err error) {
 
 func Test_validRequestWithMD5AndBase64(t *testing.T) {
 	t.Cleanup(cleanup)
-	SetHash(md5.New)
-	SetEncoder(&base64Encoder{enc: base64.RawStdEncoding})
+	SetHash(sha1.New)
+	SetEncoder(&base64Encoder{enc: base64.StdEncoding})
 	SetLogger(&testLogger{})
 	type args struct {
 		c        *gin.Context
@@ -239,7 +245,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			name: "HeaderWithoutAk",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderAccessKey, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerAccessKey, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -251,7 +257,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			name: "HeaderWithoutTs",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderTimestramp, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestramp, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -263,7 +269,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			name: "HeaderWithoutSign",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerSignature, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -275,7 +281,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			name: "HeaderWithInvalidSign",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", HeaderSignature, "ClKfZE+/Ke788i/NZuIuQ"),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerSignature, "ClKfZE+/Ke788i/NZuIuQ"),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -322,7 +328,9 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			if err != nil {
 				t.Logf("%s", err)
 			}
-			// t.Logf("%+v", tt.args.c.Request)
+			if tt.name == "Ok" {
+				t.Logf("%v", tt.args.c.Request.Header)
+			}
 		})
 	}
 }
