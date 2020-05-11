@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
-	"fmt"
 	"hash"
 	"sort"
 	"strconv"
@@ -15,72 +14,40 @@ import (
 	"time"
 )
 
-var (
-	hashFunc HashFunc = sha256.New
-	encoder  Encoder  = &hexEncoder{}
-	logger   Logger   = &discardLogger{}
-)
-
-// Encoder 编码方法接口
-type Encoder interface {
-	// EncodeToString 编码成字符串
-	EncodeToString(b []byte) string
-	// DecodeString 将字符串解码成字节切片
-	DecodeString(s string) ([]byte, error)
-}
-
 // HashFunc 返回一个hash.Hash接口
 type HashFunc func() hash.Hash
 
-// SetHash 自定义Hash
+var hashFunc HashFunc = sha256.New
+
+// SetHash 使用自定义Hash算法,使用Validate后再次调用会panic
 func SetHash(h HashFunc) {
+	if initialized {
+		panic("必须在使用Validate前调用")
+	}
 	if h != nil {
 		hashFunc = h
 	}
 }
 
-// KeyFunc 查询secretkey
+// KeyFunc 查询accesskey,返回secretKey的函数
 type KeyFunc func(accessKey string) (secretKey string)
 
 const (
-	// HeaderAccessKey 访问key
-	HeaderAccessKey = `x-auth-accesskey`
-	// HeaderTimestramp 访问时间戳, 前1分钟或者后5分钟之内有效
-	HeaderTimestramp = `x-auth-timestramp`
-	// HeaderSignature 签名hmac的签名
-	HeaderSignature = `x-auth-signature`
-	// HeaderBodyHash http的Body hash计算的mac
-	HeaderBodyHash = `x-auth-body-hash`
-	// HeaderRandomStr 随即字符串
-	HeaderRandomStr = `x-auth-random-str`
+	// headerAccessKey 访问key
+	headerAccessKey = `x-auth-accesskey`
+	// headerTimestramp 访问时间戳, 前1分钟或者后5分钟之内有效
+	headerTimestramp = `x-auth-timestramp`
+	// headerSignature 签名hmac的签名
+	headerSignature = `x-auth-signature`
+	// headerBodyHash http的Body hash计算的mac
+	headerBodyHash = `x-auth-body-hash`
+	// headerRandomStr 随即字符串
+	headerRandomStr = `x-auth-random-str`
 )
 
 const (
 	maxDuration = 5 * time.Minute
 	minDuration = -1 * time.Minute
-)
-
-// Error aksk的错误定义
-type Error struct {
-	// 错误消息
-	Message string `json:"message"`
-}
-
-func newError(msg string) *Error {
-	return &Error{Message: msg}
-}
-
-func (e *Error) Error() string {
-	return fmt.Sprintf("%s", e.Message)
-}
-
-var (
-	// ErrTimestrampEmpty 缺少时间戳
-	ErrTimestrampEmpty = newError("未提供timestramp")
-	// ErrTimestrampExpired 时间戳过期
-	ErrTimestrampExpired = newError("timestramp过期")
-	// ErrTimestrampInvalid 时间戳无效
-	ErrTimestrampInvalid = newError("timestramp无效")
 )
 
 // parseTimestramp 解析时间戳

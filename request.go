@@ -11,15 +11,15 @@ import (
 	"time"
 )
 
+// RequestFunc aksk的请求构造函数
+type RequestFunc func(ctx context.Context, method, url string, body []byte) (*http.Request, error)
+
 var (
 	// ErrAccessKeyEmpty ak为空
 	ErrAccessKeyEmpty = newError("accesskey为空")
 	// ErrSecretKeyEmpty sk为空
 	ErrSecretKeyEmpty = newError("secretkey为空")
 )
-
-// RequestFunc aksk的请求构造函数
-type RequestFunc func(ctx context.Context, method, url string, body []byte) (*http.Request, error)
 
 // NewRequestFunc 返回一个RequestFunc
 func NewRequestFunc(ak, sk string) (RequestFunc, error) {
@@ -45,25 +45,25 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 		ss := make([]string, 0, 5)
 		ss = append(ss, ak, randomstr)
 		// ak头部
-		req.Header.Set(HeaderAccessKey, ak)
+		req.Header.Set(headerAccessKey, ak)
 		// randomstr头部
-		req.Header.Set(HeaderRandomStr, randomstr)
+		req.Header.Set(headerRandomStr, randomstr)
 
 		ts := strconv.FormatInt(time.Now().Unix(), 10)
 		ss = append(ss, ts)
 		// 时间戳头部
-		req.Header.Set(HeaderTimestramp, ts)
+		req.Header.Set(headerTimestramp, ts)
 
 		if len(body) > 0 {
 			bodyhash := encoder.EncodeToString(hashSum(body))
 			ss = append(ss, bodyhash)
 			// body的hash头部
-			req.Header.Set(HeaderBodyHash, bodyhash)
+			req.Header.Set(headerBodyHash, bodyhash)
 		}
 
 		// 签名头部
 		b = hmacSum([]byte(sk), ss...)
-		req.Header.Set(HeaderSignature, encoder.EncodeToString(b))
+		req.Header.Set(headerSignature, encoder.EncodeToString(b))
 		return req, nil
 	}
 	return fn, nil

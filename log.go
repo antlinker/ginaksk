@@ -5,8 +5,13 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
-// SetLogger 设置日志
+var logger Logger = &discardLogger{}
+
+// SetLogger 设置自定义的日志输出,使用Validate后再次调用会panic
 func SetLogger(l Logger) {
+	if initialized {
+		panic("必须在使用Validate前调用")
+	}
 	if l != nil {
 		logger = l
 	}
