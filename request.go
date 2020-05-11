@@ -1,4 +1,4 @@
-package aksk
+package ginaksk
 
 import (
 	"bytes"

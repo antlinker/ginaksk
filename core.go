@@ -1,7 +1,7 @@
 /*
-Package aksk 基于ak, sk实现的服务认证中间件
+Package ginaksk 基于ak, sk实现的服务认证中间件
 */
-package aksk
+package ginaksk
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 
 var (
 	hashFunc HashFunc = sha256.New
-	encoder  Encoder  = &HexEncoder{}
+	encoder  Encoder  = &hexEncoder{}
 	logger   Logger   = &discardLogger{}
 )
 

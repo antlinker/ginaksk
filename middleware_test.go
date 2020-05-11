@@ -1,11 +1,10 @@
-package aksk
+package ginaksk
 
 import (
 	"context"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -16,7 +15,7 @@ import (
 
 func cleanup() {
 	hashFunc = sha256.New
-	encoder = &HexEncoder{}
+	encoder = &hexEncoder{}
 	logger = &discardLogger{}
 }
 
@@ -38,14 +37,16 @@ func generateRequestWithEmptyBody(ak, sk string) *http.Request {
 	return r
 }
 
-type printLogger struct{}
+type testLogger struct {
+	t *testing.T
+}
 
-func (p *printLogger) Printf(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
+func (p *testLogger) Printf(format string, args ...interface{}) {
+	p.t.Logf(format, args...)
 }
 
 func Test_validRequest(t *testing.T) {
-	SetLogger(&printLogger{})
+	SetLogger(&testLogger{t: t})
 	type args struct {
 		c        *gin.Context
 		keyFn    KeyFunc
@@ -199,7 +200,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 	t.Cleanup(cleanup)
 	SetHash(md5.New)
 	SetEncoder(&base64Encoder{enc: base64.RawStdEncoding})
-	SetLogger(&printLogger{})
+	SetLogger(&testLogger{})
 	type args struct {
 		c        *gin.Context
 		keyFn    KeyFunc

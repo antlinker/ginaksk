@@ -1,4 +1,4 @@
-package aksk
+package ginaksk
 
 // Logger 日志
 type Logger interface {
