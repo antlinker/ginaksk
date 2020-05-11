@@ -9,15 +9,11 @@ func SetEncoder(enc Encoder) {
 	if enc == nil {
 		return
 	}
-	lock.Lock()
 	encoder = enc
-	lock.Unlock()
 }
 
 // HexEncoder 16进制编码格式
 type HexEncoder struct{}
-
-var encoder Encoder = &HexEncoder{}
 
 // EncodeToString 编码为16进制字符串
 func (h *HexEncoder) EncodeToString(b []byte) string {

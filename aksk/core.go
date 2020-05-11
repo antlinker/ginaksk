@@ -12,11 +12,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
-var lock sync.Mutex
+var (
+	hashFunc HashFunc = sha256.New
+	encoder  Encoder  = &HexEncoder{}
+	logger   Logger   = &NullLogger{}
+)
 
 // Encoder 编码方法接口
 type Encoder interface {
@@ -29,7 +32,10 @@ type Encoder interface {
 // HashFunc 返回一个hash.Hash接口
 type HashFunc func() hash.Hash
 
-var hashFunc HashFunc = sha256.New
+// SetHash 自定义Hash
+func SetHash(h HashFunc) {
+	hashFunc = h
+}
 
 // KeyFunc 查询secretkey
 type KeyFunc func(accessKey string) (secretKey string)

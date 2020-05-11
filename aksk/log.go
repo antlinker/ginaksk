@@ -5,16 +5,12 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
-var logger Logger = &NullLogger{}
-
 // SetLogger 设置日志
 func SetLogger(l Logger) {
 	if l == nil {
 		return
 	}
-	lock.Lock()
 	logger = l
-	lock.Unlock()
 }
 
 // NullLogger 空日志
