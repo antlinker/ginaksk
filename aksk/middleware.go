@@ -28,11 +28,11 @@ func handleError(c *gin.Context, err error) {
 	if !ok {
 		e = &Error{Message: err.Error()}
 	}
-	logger.Printf("valid request error: %w", err)
+	logger.Printf("valid request error: %s", err)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
 }
 
-// Validate 验证请, keyFn 指定了查询SecretKey的函数, 如果skipBody为true, 跳过检查body的hash值是否一致, fn不为空时,使用自定义的错误处理函数
+// Validate 返回一个验证请求的gin中间件, keyFn指定了查询SecretKey的函数, 如果skipBody为true, 跳过检查body的hash值是否一致, fn不为空时,使用自定义的错误处理函数
 func Validate(keyFn KeyFunc, skipBody bool, fn ErrorHandler) gin.HandlerFunc {
 	logger.Printf("启用aksk认证")
 	if keyFn == nil {

@@ -4,6 +4,8 @@
 
 ```go
 
+var keyStore = make(map[string]string)
+
 // GetKeyFunc 返回aksk.KeyFunc
 func GetKeyFunc() aksk.KeyFunc {
 	return func(ak string) string {
@@ -37,10 +39,25 @@ func handlError(c *gin.Context, err error) {
 	c.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorCode(response.CodeUndifined))
 }
 
+
+type base64Encoder struct {
+	enc *base64.Encoding
+}
+
+func (b64 *base64Encoder) EncodeToString(b []byte) string {
+	return b64.enc.EncodeToString(b)
+}
+
+func (b64 *base64Encoder) DecodeString(s string) (b []byte, err error) {
+	return b64.enc.DecodeString(s)
+}
+
 // UseAKSK 通过aksk认证请求
 func UseAKSK(g *gin.RouterGroup, a []config.Authentication) {
 	keyStore = newStore(a)
-	aksk.SetLogger(&logger{})
+	aksk.SetLogger(&logger{}) // 可选
+	aksk.SetHash(md5.New) // 可选
+	aksk.SetEncoder(&base64Encoder{enc: base64.RawStdEncoding})
 	g.Use(aksk.Validate(GetKeyFunc(), false, handlError))
 }
 ```
