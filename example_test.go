@@ -2,7 +2,6 @@ package ginaksk_test
 
 import (
 	"crypto/md5"
-	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -69,5 +68,5 @@ func Example_aksk() {
 	e := gin.New()
 	// 验证请求签名, 并验证请求内容, 自定义错误处理
 	e.Use(ginaksk.Validate(GetKeyFunc(), false, handlError))
-	ginaksk.SetHash(sha1.New)
+	// ginaksk.SetHash(sha1.New) // [Bad!] 取消注释会触发panic
 }
