@@ -42,7 +42,7 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 		}
 		randomstr := encoder.EncodeToString(b)
 
-		ss := make([]string, 0, 5)
+		ss := make([]string, 0, 4)
 		ss = append(ss, ak, randomstr)
 		// ak头部
 		req.Header.Set(headerAccessKey, ak)
