@@ -41,7 +41,7 @@ const (
 	headerSignature = `x-auth-signature`
 	// headerBodyHash http的Body hash计算的mac
 	headerBodyHash = `x-auth-body-hash`
-	// headerRandomStr 随即字符串
+	// headerRandomStr 随机字符串
 	headerRandomStr = `x-auth-random-str`
 )
 

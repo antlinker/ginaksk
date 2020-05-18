@@ -35,10 +35,10 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 			return nil, fmt.Errorf("创建HTTP请求发生错误:%w", err)
 		}
 
-		// 随即字符串
+		// 随机字符串
 		b := make([]byte, 6)
 		if _, err := io.ReadFull(rand.Reader, b); err != nil {
-			return nil, fmt.Errorf("读取随即字符串发生错误:%w", err)
+			return nil, fmt.Errorf("读取随机字符串发生错误:%w", err)
 		}
 		randomstr := encoder.EncodeToString(b)
 
