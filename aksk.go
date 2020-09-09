@@ -35,8 +35,8 @@ type KeyFunc func(accessKey string) (secretKey string)
 const (
 	// headerAccessKey 访问key
 	headerAccessKey = `x-auth-accesskey`
-	// headerTimestramp 访问时间戳, 前1分钟或者后5分钟之内有效
-	headerTimestramp = `x-auth-timestramp`
+	// headerTimestamp 访问时间戳, 前1分钟或者后5分钟之内有效
+	headerTimestamp = `x-auth-timestamp`
 	// headerSignature 签名hmac的签名
 	headerSignature = `x-auth-signature`
 	// headerBodyHash http的Body hash计算的mac

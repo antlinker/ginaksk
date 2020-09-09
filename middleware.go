@@ -54,7 +54,11 @@ func validRequest(c *gin.Context, keyFn KeyFunc, skipBody bool) error {
 	if sk == "" {
 		return ErrSecretKeyEmpty
 	}
-	ts := c.GetHeader(headerTimestramp)
+	ts := c.GetHeader(headerTimestamp)
+	// 兼容以前的错误拼写
+	if ts == "" {
+		ts = c.GetHeader(`x-auth-timestramp`)
+	}
 	if err := parseTimestramp(ts); err != nil {
 		return err
 	}

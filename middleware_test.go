@@ -104,7 +104,7 @@ func Test_validRequest(t *testing.T) {
 			name: "HeaderWithoutTs",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestramp, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestamp, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"
@@ -257,7 +257,7 @@ func Test_validRequestWithMD5AndBase64(t *testing.T) {
 			name: "HeaderWithoutTs",
 			args: args{
 				c: &gin.Context{
-					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestramp, ""),
+					Request: generateRequestWithHeader("202cb962ac59075b964b07152d234b70", "250cf8b51c773f3f8dc8b4be867a9a02", headerTimestamp, ""),
 				},
 				keyFn: func(ak string) string {
 					return "250cf8b51c773f3f8dc8b4be867a9a02"

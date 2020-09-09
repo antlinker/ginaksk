@@ -52,7 +52,7 @@ func NewRequestFunc(ak, sk string) (RequestFunc, error) {
 		ts := strconv.FormatInt(time.Now().Unix(), 10)
 		ss = append(ss, ts)
 		// 时间戳头部
-		req.Header.Set(headerTimestramp, ts)
+		req.Header.Set(headerTimestamp, ts)
 
 		if len(body) > 0 {
 			bodyhash := encoder.EncodeToString(hashSum(body))
