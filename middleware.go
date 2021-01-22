@@ -59,7 +59,7 @@ func validRequest(c *gin.Context, keyFn KeyFunc, skipBody bool) error {
 	if ts == "" {
 		ts = c.GetHeader(`x-auth-timestramp`)
 	}
-	if err := parseTimestramp(ts); err != nil {
+	if err := parseTimestamp(ts); err != nil {
 		return err
 	}
 	signature := c.GetHeader(headerSignature)

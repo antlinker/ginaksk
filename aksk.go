@@ -50,10 +50,10 @@ const (
 	minDuration = -1 * time.Minute
 )
 
-// parseTimestramp 解析时间戳
-func parseTimestramp(s string) error {
+// parseTimestamp 解析时间戳
+func parseTimestamp(s string) error {
 	if s == "" {
-		return ErrTimestrampEmpty
+		return ErrTimestampEmpty
 	}
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
@@ -62,9 +62,9 @@ func parseTimestramp(s string) error {
 	t := time.Unix(n, 0)
 	d := time.Now().Sub(t)
 	if d > maxDuration {
-		return ErrTimestrampExpired
+		return ErrTimestampExpired
 	} else if d < minDuration {
-		return ErrTimestrampInvalid
+		return ErrTimestampInvalid
 	}
 	return nil
 }

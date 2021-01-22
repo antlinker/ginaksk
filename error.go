@@ -17,13 +17,13 @@ func (e *Error) Error() string {
 }
 
 var (
-	// ErrTimestrampExpired 时间戳过期
-	ErrTimestrampExpired = newError("请求时间戳过期")
-	// ErrTimestrampInvalid 时间戳无效
-	ErrTimestrampInvalid = newError("请求时间戳无效")
+	// ErrTimestampExpired 时间戳过期
+	ErrTimestampExpired = newError("请求时间戳过期")
+	// ErrTimestampInvalid 时间戳无效
+	ErrTimestampInvalid = newError("请求时间戳无效")
 
-	// ErrTimestrampEmpty 缺少时间戳
-	ErrTimestrampEmpty = newError("请求缺少时间戳")
+	// ErrTimestampEmpty 缺少时间戳
+	ErrTimestampEmpty = newError("请求缺少时间戳")
 	// ErrSignatueEmpty 请求签名为空
 	ErrSignatueEmpty = newError("请求缺少签名")
 	// ErrSignatureInvalid 请求签名无效
